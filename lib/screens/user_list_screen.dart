@@ -29,21 +29,24 @@ class _UserListScreenState extends State<UserListScreen> {
 
    try {
      final response = await http.get(Uri.parse(url));
-     debugPrint('Raw response: ${response.body}'); // ✅ print raw JSON
-
      if (response.statusCode == 200) {
-       final data = json.decode(response.body);
-       debugPrint('Decoded data: $data'); // ✅ print decoded map
-       debugPrint('Users list: ${data['users']}'); // ✅ print just the user list
+       final Map<String, dynamic> data = json.decode(response.body);
+       print(data);
+       final Map<String, dynamic> usersList = data['users'];
 
-       globalUsers = data['users']  ; // 🔸 store globally
-       debugPrint('Janki data: $globalUsers');
+       globalUsers = usersList as List<Map>;
 
        setState(() {
-         isLoading = false; // rebuild UI with data
+         isLoading = false;
        });
+
+       //  Show SnackBar if no data
+       if (globalUsers.isEmpty) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('No data to display')),
+         );
+       }
      } else {
-       debugPrint('Failed status code: ${response.statusCode}');
        throw Exception('Failed to load data');
      }
    } catch (e) {
@@ -51,8 +54,14 @@ class _UserListScreenState extends State<UserListScreen> {
      setState(() {
        isLoading = false;
      });
+
+     // 🔸 Show error snackbar
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text('Error: ${e.toString()}')),
+     );
    }
  }
+
 
  @override
   Widget build(BuildContext context) {
